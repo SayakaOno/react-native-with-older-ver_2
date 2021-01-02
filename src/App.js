@@ -1,20 +1,42 @@
-import React, {useEffect} from 'react';
-import {View, Text, StyleSheet} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {View, StyleSheet} from 'react-native';
 import firebase from 'firebase/app';
 import firebaseConfig from '../firebaseConfig';
-import {Header} from './components/common';
+import {Header, Button, Spinner} from './components/common';
 import LoginForm from './components/LoginForm';
 
 const App = () => {
+  const [loggedIn, setLoggedIn] = useState(null);
+
   useEffect(() => {
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    firebase.auth().onAuthStateChanged(user => {
+      setLoggedIn(user ? true : false);
+    });
   }, []);
+
+  const renderContent = () => {
+    switch (loggedIn) {
+      case true:
+        return (
+          <View style={{height: 60}}>
+            <Button onPress={() => firebase.auth().signOut()}>Log Out</Button>
+          </View>
+        );
+      case false:
+        return <LoginForm />;
+      default:
+        return <Spinner size="large" />;
+    }
+  };
 
   return (
     <View>
       <Header headerText="Header" />
-      <Text>App</Text>
-      <LoginForm />
+      {renderContent()}
     </View>
   );
 };
